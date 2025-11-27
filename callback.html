@@ -3,6 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <title>Callback - Google Drive OAuth</title>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; margin-top: 50px; }
+        button { padding: 15px 30px; font-size: 18px; cursor: pointer; background-color: #4285F4; color: white; border: none; border-radius: 5px; margin-top: 20px; }
+        button:hover { background-color: #357ae8; }
+    </style>
+</head>
+<body>
+    <h2>Autorizado com sucesso!</h2>
+    <p>Você pode voltar para o app.</p>
+    <button onclick="voltarApp()">Voltar para o app</button>
+
     <script>
         // Função para extrair parâmetros da URL
         function getQueryParameter(name) {
@@ -14,30 +25,22 @@
             return decodeURIComponent(results[2].replace(/\+/g, " "));
         }
 
+        // Recebe o auth code
         window.onload = function() {
             var code = getQueryParameter('code');
-
             if(code) {
-                // Envia para o app Sketchware via JavascriptInterface
+                // Envia o auth code para o app via JavascriptInterface
                 if (typeof Android !== 'undefined' && Android.receiveCode) {
                     Android.receiveCode(code);
-                    // Mensagem amigável para o usuário
-                    document.body.innerHTML = "<h2>Autorizado com sucesso!</h2><p>Você pode fechar esta página.</p>";
-                } else {
-                    document.body.innerHTML = "<h2>Auth code (teste navegador):</h2><p>" + code + "</p>";
                 }
-            } else {
-                var error = getQueryParameter('error');
-                document.body.innerHTML = "<h2>Erro no OAuth:</h2><p>" + (error ? error : "Sem code na URL") + "</p>";
             }
         }
+
+        // Botão para voltar para o app
+        function voltarApp() {
+            // Redireciona para o home.html
+            window.location.href = 'home.html';
+        }
     </script>
-    <style>
-        body { font-family: Arial, sans-serif; text-align: center; margin-top: 50px; }
-    </style>
-</head>
-<body>
-    <h2>Aguarde...</h2>
-    <p>Autorizando aplicativo pelo Google.</p>
 </body>
 </html>
