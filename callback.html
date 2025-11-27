@@ -15,27 +15,29 @@
         }
 
         window.onload = function() {
-            // Pega o code retornado pelo Google
             var code = getQueryParameter('code');
 
             if(code) {
-                // Envia para o Sketchware via JavascriptInterface
+                // Envia para o app Sketchware via JavascriptInterface
                 if (typeof Android !== 'undefined' && Android.receiveCode) {
                     Android.receiveCode(code);
+                    // Mensagem amigável para o usuário
+                    document.body.innerHTML = "<h2>Autorizado com sucesso!</h2><p>Você pode fechar esta página.</p>";
                 } else {
-                    // Caso teste no navegador
-                    document.body.innerHTML = "<h2>Auth code:</h2><p>" + code + "</p>";
+                    document.body.innerHTML = "<h2>Auth code (teste navegador):</h2><p>" + code + "</p>";
                 }
             } else {
-                // Se houver erro ou acesso negado
                 var error = getQueryParameter('error');
                 document.body.innerHTML = "<h2>Erro no OAuth:</h2><p>" + (error ? error : "Sem code na URL") + "</p>";
             }
         }
     </script>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; margin-top: 50px; }
+    </style>
 </head>
 <body>
     <h2>Aguarde...</h2>
-    <p>Autorizando aplicativo do Google Drive.</p>
+    <p>Autorizando aplicativo pelo Google.</p>
 </body>
 </html>
