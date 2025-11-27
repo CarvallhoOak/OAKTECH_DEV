@@ -1,55 +1,48 @@
 <!DOCTYPE html>
-<html>
+<html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <title>Login Google Drive</title>
+    <title>OAKTECH_DEV - Login Google Drive</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
         body {
             font-family: Arial, sans-serif;
-            background: #f0f0f0;
             text-align: center;
-            padding-top: 70px;
+            margin-top: 50px;
         }
-        .btn {
+        button {
+            padding: 15px 30px;
+            font-size: 18px;
+            cursor: pointer;
             background-color: #4285F4;
             color: white;
-            padding: 14px 22px;
-            font-size: 18px;
-            border-radius: 8px;
-            text-decoration: none;
-            display: inline-block;
-            margin-top: 20px;
+            border: none;
+            border-radius: 5px;
         }
-        .btn:hover {
+        button:hover {
             background-color: #357ae8;
         }
     </style>
 </head>
 <body>
-
-    <h2>Google Drive - Login</h2>
-    <p>Clique para autorizar o aplicativo.</p>
-
-    <a id="loginBtn" class="btn" href="#">Entrar com Google</a>
+    <h1>Gerenciador de Arquivos Google Drive</h1>
+    <p>Clique abaixo para entrar com sua conta Google</p>
+    <button onclick="login()">Entrar com Google</button>
 
     <script>
-        const client_id = "146865283755-2c8558nq69eu1b3eb4i5soojr7cpd01r.apps.googleusercontent.com";
+        // ===== CONFIGURAÇÃO OAUTH =====
+        const CLIENT_ID = '146865283755-2c8558nq69eu1b3eb4i5soojr7cpd01r.apps.googleusercontent.com';
+        const REDIRECT_URI = 'https://carvallhooak.github.io/OAKTECH_DEV/callback.html';
+        const SCOPE = 'https://www.googleapis.com/auth/drive';
+        const RESPONSE_TYPE = 'code';
+        const ACCESS_TYPE = 'offline';
 
-        const redirect_uri = "https://carvallhooak.github.io/OAKTECH_DEV/callback.html";
-
-        const scope = "https://www.googleapis.com/auth/drive.file";
-
-        const authUrl =
-            "https://accounts.google.com/o/oauth2/v2/auth"
-            + "?client_id=" + client_id
-            + "&redirect_uri=" + encodeURIComponent(redirect_uri)
-            + "&response_type=code"
-            + "&access_type=offline"
-            + "&prompt=consent"
-            + "&scope=" + encodeURIComponent(scope);
-
-        document.getElementById("loginBtn").href = authUrl;
+        function login() {
+            // Monta URL de autorização
+            const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${CLIENT_ID}&redirect_uri=${REDIRECT_URI}&response_type=${RESPONSE_TYPE}&scope=${SCOPE}&access_type=${ACCESS_TYPE}&prompt=consent`;
+            // Redireciona para login
+            window.location.href = authUrl;
+        }
     </script>
-
 </body>
 </html>
