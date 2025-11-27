@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Google OAuth Callback</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f5f5f5;
+            text-align: center;
+            padding-top: 70px;
+        }
+        .box {
+            background: white;
+            padding: 25px;
+            margin: auto;
+            width: 85%;
+            max-width: 400px;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        h2 {
+            color: #4CAF50;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="box">
+        <h2>Autorização Concluída</h2>
+        <p>Agora você já pode voltar ao aplicativo.</p>
+    </div>
+
+    <script>
+        // Função para pegar parâmetros da URL
+        function getQueryParam(param) {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get(param);
+        }
+
+        // Extrai o AUTH CODE retornado pelo Google
+        const authCode = getQueryParam("code");
+
+        if (authCode) {
+            console.log("Auth Code:", authCode);
+
+            // Envia o code para o Sketchware Pro via JavaScriptInterface
+            if (window.Android && window.Android.getAuthCode) {
+                window.Android.getAuthCode(authCode);
+            }
+        } else {
+            console.log("Nenhum auth code encontrado.");
+        }
+    </script>
+
+</body>
+</html>
