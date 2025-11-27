@@ -1,79 +1,154 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <title>OAKTECH_DEV - Meus Arquivos</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <style>
-        body { font-family: Arial, sans-serif; padding: 20px; background-color: #f4f4f4; }
-        h1 { text-align: center; }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; background: white; }
-        th, td { padding: 12px; border: 1px solid #ddd; text-align: left; }
-        th { background-color: #4285F4; color: white; }
-        tr:hover { background-color: #f1f1f1; }
-        .loading { text-align: center; margin-top: 50px; font-size: 18px; }
-    </style>
+<meta charset="UTF-8">
+<title>OAKTECH_DEV - Meus Arquivos</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+body { font-family: Arial, sans-serif; padding: 20px; background-color: #f4f4f4; }
+h1 { text-align: center; }
+button { padding: 8px 16px; font-size: 14px; margin-bottom: 15px; cursor: pointer; background-color: #4285F4; color: white; border: none; border-radius: 5px; }
+button:hover { background-color: #357ae8; }
+table { width: 100%; border-collapse: collapse; background: white; }
+th, td { padding: 12px; border: 1px solid #ddd; text-align: left; vertical-align: middle; }
+th { background-color: #4285F4; color: white; }
+tr:hover { background-color: #f1f1f1; }
+.loading { text-align: center; margin-top: 20px; font-size: 18px; }
+img.icon { width: 24px; height: 24px; vertical-align: middle; margin-right: 8px; cursor: pointer; }
+#breadcrumbs { margin-bottom: 10px; font-size: 14px; }
+#breadcrumbs span { cursor: pointer; color: #4285F4; }
+#breadcrumbs span:hover { text-decoration: underline; }
+</style>
 </head>
 <body>
-    <h1>Meus Arquivos do Google Drive</h1>
-    <div class="loading" id="loading">Carregando arquivos...</div>
-    <table id="fileTable" style="display:none;">
-        <thead>
-            <tr>
-                <th>Nome</th>
-                <th>ID</th>
-            </tr>
-        </thead>
-        <tbody id="fileBody">
-        </tbody>
-    </table>
 
-    <script>
-        // Função que será chamada pelo Sketchware para enviar o access_token
-        function setAccessToken(token) {
-            window.ACCESS_TOKEN = token;
+<h1>Meus Arquivos do Google Drive</h1>
+<div id="breadcrumbs"></div>
+<div class="loading" id="loading">Carregando arquivos...</div>
+<table id="fileTable" style="display:none;">
+<thead>
+<tr>
+<th>Ícone</th>
+<th>Nome</th>
+<th>ID</th>
+</tr>
+</thead>
+<tbody id="fileBody"></tbody>
+</table>
+
+<script>
+let ACCESS_TOKEN;
+let CURRENT_FOLDER = "root";
+let PATH_STACK = [{id: "root", name: "Meu Drive"}]; // pilha de navegação para breadcrumbs
+
+function setAccessToken(token) {
+    ACCESS_TOKEN = token;
+    listarArquivos();
+}
+
+function atualizarBreadcrumbs() {
+    const bc = document.getElementById('breadcrumbs');
+    bc.innerHTML = "";
+    PATH_STACK.forEach((p, idx) => {
+        const span = document.createElement('span');
+        span.innerText = p.name;
+        span.onclick = () => {
+            // Voltar para pasta clicada
+            PATH_STACK = PATH_STACK.slice(0, idx+1);
+            CURRENT_FOLDER = p.id;
             listarArquivos();
+        };
+        bc.appendChild(span);
+        if(idx < PATH_STACK.length -1) {
+            bc.appendChild(document.createTextNode(" / "));
         }
+    });
+}
 
-        function listarArquivos() {
-            if(!window.ACCESS_TOKEN) {
-                document.getElementById('loading').innerText = "Erro: token não disponível!";
-                return;
-            }
+function listarArquivos() {
+    if(!ACCESS_TOKEN) {
+        document.getElementById('loading').innerText = "Erro: token não disponível!";
+        return;
+    }
 
-            fetch('https://www.googleapis.com/drive/v3/files', {
-                method: 'GET',
-                headers: {
-                    'Authorization': 'Bearer ' + window.ACCESS_TOKEN
+    atualizarBreadcrumbs();
+    document.getElementById('loading').style.display = "block";
+    document.getElementById('fileTable').style.display = "none";
+
+    fetch(`https://www.googleapis.com/drive/v3/files?q='${CURRENT_FOLDER}'+in+parents&fields=files(id,name,mimeType)`, {
+        method: 'GET',
+        headers: { 'Authorization': 'Bearer ' + ACCESS_TOKEN }
+    })
+    .then(res => res.json())
+    .then(data => {
+        const tbody = document.getElementById('fileBody');
+        tbody.innerHTML = "";
+
+        if(data.files && data.files.length > 0) {
+            data.files.forEach(file => {
+                const tr = document.createElement('tr');
+
+                let iconUrl = 'https://img.icons8.com/fluency/48/000000/document.png';
+                let clickAction = null;
+
+                // Ícones por tipo
+                if(file.mimeType === 'application/vnd.google-apps.folder') {
+                    iconUrl = 'https://img.icons8.com/fluency/48/000000/folder-invoices.png';
+                    clickAction = () => {
+                        CURRENT_FOLDER = file.id;
+                        PATH_STACK.push({id: file.id, name: file.name});
+                        listarArquivos();
+                    };
+                } else if(file.mimeType.includes('pdf')) {
+                    iconUrl = 'https://img.icons8.com/fluency/48/000000/pdf.png';
+                    clickAction = () => { window.open(`https://drive.google.com/uc?id=${file.id}&export=download`, '_blank'); };
+                } else if(file.mimeType.includes('word') || file.mimeType.includes('document')) {
+                    iconUrl = 'https://img.icons8.com/fluency/48/000000/ms-word.png';
+                    clickAction = () => { window.open(`https://drive.google.com/uc?id=${file.id}&export=download`, '_blank'); };
+                } else if(file.mimeType.includes('excel') || file.mimeType.includes('spreadsheet')) {
+                    iconUrl = 'https://img.icons8.com/fluency/48/000000/ms-excel.png';
+                    clickAction = () => { window.open(`https://drive.google.com/uc?id=${file.id}&export=download`, '_blank'); };
+                } else if(file.mimeType.includes('presentation') || file.mimeType.includes('slides')) {
+                    iconUrl = 'https://img.icons8.com/fluency/48/000000/presentation.png';
+                    clickAction = () => { window.open(`https://drive.google.com/uc?id=${file.id}&export=download`, '_blank'); };
+                } else if(file.mimeType.includes('image')) {
+                    iconUrl = 'https://img.icons8.com/fluency/48/000000/image.png';
+                    clickAction = () => { window.open(`https://drive.google.com/uc?id=${file.id}&export=download`, '_blank'); };
+                } else if(file.mimeType.includes('video')) {
+                    iconUrl = 'https://img.icons8.com/fluency/48/000000/video.png';
+                    clickAction = () => { window.open(`https://drive.google.com/uc?id=${file.id}&export=download`, '_blank'); };
                 }
-            })
-            .then(response => response.json())
-            .then(data => {
-                const tbody = document.getElementById('fileBody');
-                tbody.innerHTML = "";
 
-                if(data.files && data.files.length > 0) {
-                    data.files.forEach(file => {
-                        const tr = document.createElement('tr');
-                        const tdName = document.createElement('td');
-                        tdName.innerText = file.name;
-                        const tdId = document.createElement('td');
-                        tdId.innerText = file.id;
-                        tr.appendChild(tdName);
-                        tr.appendChild(tdId);
-                        tbody.appendChild(tr);
-                    });
-                    document.getElementById('fileTable').style.display = "table";
-                    document.getElementById('loading').style.display = "none";
-                } else {
-                    document.getElementById('loading').innerText = "Nenhum arquivo encontrado.";
-                }
-            })
-            .catch(err => {
-                console.error(err);
-                document.getElementById('loading').innerText = "Erro ao carregar arquivos.";
+                const tdIcon = document.createElement('td');
+                const img = document.createElement('img');
+                img.src = iconUrl;
+                img.className = 'icon';
+                if(clickAction) img.onclick = clickAction;
+                tdIcon.appendChild(img);
+
+                const tdName = document.createElement('td');
+                tdName.innerText = file.name;
+
+                const tdId = document.createElement('td');
+                tdId.innerText = file.id;
+
+                tr.appendChild(tdIcon);
+                tr.appendChild(tdName);
+                tr.appendChild(tdId);
+                tbody.appendChild(tr);
             });
+
+            document.getElementById('fileTable').style.display = "table";
+            document.getElementById('loading').style.display = "none";
+        } else {
+            document.getElementById('loading').innerText = "Nenhum arquivo encontrado.";
         }
-    </script>
+    })
+    .catch(err => {
+        console.error(err);
+        document.getElementById('loading').innerText = "Erro ao carregar arquivos.";
+    });
+}
+</script>
 </body>
 </html>
