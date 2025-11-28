@@ -1,46 +1,33 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <meta charset="UTF-8">
-    <title>Callback - Google Drive OAuth</title>
-    <style>
-        body { font-family: Arial, sans-serif; text-align: center; margin-top: 50px; }
-        button { padding: 15px 30px; font-size: 18px; cursor: pointer; background-color: #4285F4; color: white; border: none; border-radius: 5px; margin-top: 20px; }
-        button:hover { background-color: #357ae8; }
-    </style>
+  <meta charset="UTF-8">
+  <title>Callback - Google OAuth</title>
+  <style>
+    body { font-family: Arial; text-align:center; margin-top:50px; }
+    button { padding:12px 20px; background:#4285F4; color:#fff; border:none; border-radius:6px; }
+  </style>
 </head>
 <body>
-    <h2>Autorizado com sucesso!</h2>
-    <p>Você pode voltar para o app.</p>
-    <button onclick="voltarApp()">Voltar para o app</button>
+  <h2>Aguarde...</h2>
+  <p>Finalizando autorização</p>
+  <script>
+    (function(){
+      const params = new URLSearchParams(window.location.search);
+      const code = params.get('code');
+      const error = params.get('error');
 
-    <script>
-        // Função para extrair parâmetros da URL
-        function getQueryParameter(name) {
-            name = name.replace(/[\[\]]/g, "\\$&");
-            var regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)"),
-                results = regex.exec(window.location.href);
-            if (!results) return null;
-            if (!results[2]) return '';
-            return decodeURIComponent(results[2].replace(/\+/g, " "));
+      if (code) {
+        // envia o code para o Android via JSInterface
+        if (typeof Android !== 'undefined' && Android.sendCode) {
+          Android.sendCode(code);
         }
-
-        // Recebe o auth code
-        window.onload = function() {
-            var code = getQueryParameter('code');
-            if(code) {
-                // Envia o auth code para o app via JavascriptInterface
-                if (typeof Android !== 'undefined' && Android.receiveCode) {
-                    Android.receiveCode(code);
-                }
-            }
-        }
-
-        // Botão para voltar para o app
-        function voltarApp() {
-            // Redireciona para o home.html
-            window.location.href = 'home.html';
-        }
-    </script>
+        // mostra botão para voltar
+        document.body.innerHTML = "<h2>Autorizado com sucesso!</h2><p>Toque voltar para continuar.</p><button onclick=\"if(typeof Android!=='undefined' && Android.backToApp) Android.backToApp();\">Voltar para o app</button>";
+      } else {
+        document.body.innerHTML = "<h2>Erro no OAuth</h2><p>" + (error ? error : "Sem code recebido") + "</p>";
+      }
+    })();
+  </script>
 </body>
 </html>
